@@ -1,0 +1,1626 @@
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shift.AI — Automatizacija Rasporeda</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Syne:wght@400;700;800&display=swap');
+
+
+  :root {
+    --gold: #c9a84c;
+    --gold-light: #e8c97a;
+    --gold-dim: #7a6030;
+    --bg: #080808;
+    --surface: #101010;
+    --surface2: #181818;
+    --surface3: #202020;
+    --border: #1e1e1e;
+    --border2: #2a2a2a;
+    --text: #f0ece0;
+    --text-dim: #707068;
+    --text-mid: #a0a098;
+    --red: #e05555;
+    --green: #5ec48a;
+    --blue: #6ab4e8;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Space Grotesk', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(ellipse 80% 50% at 50% -10%, rgba(201,168,76,0.04) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ─── HEADER ─── */
+  header {
+    padding: 20px 40px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    background: rgba(8,8,8,0.94);
+    backdrop-filter: blur(16px);
+    z-index: 100;
+  }
+
+  .logo-wrap { display: flex; align-items: center; gap: 14px; }
+
+  .logo-icon {
+    width: 36px; height: 36px;
+    background: var(--gold);
+    border-radius: 4px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1rem;
+    color: #000;
+    flex-shrink: 0;
+  }
+
+  .logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 1rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text);
+    line-height: 1;
+  }
+
+  .logo small {
+    display: block;
+    color: var(--text-dim);
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 400;
+    font-size: 0.7rem;
+    letter-spacing: 0.2em;
+    margin-top: 3px;
+    text-transform: uppercase;
+  }
+
+  .header-right { display: flex; align-items: center; gap: 12px; }
+
+  .ai-pill {
+    display: flex; align-items: center; gap: 6px;
+    background: rgba(201,168,76,0.08);
+    border: 1px solid rgba(201,168,76,0.2);
+    border-radius: 100px;
+    padding: 5px 12px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--gold);
+  }
+
+  .ai-dot {
+    width: 6px; height: 6px;
+    background: var(--green);
+    border-radius: 50%;
+    animation: pulse 2s ease infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.8); }
+  }
+
+  /* ─── LAYOUT ─── */
+  .container {
+    max-width: 1020px;
+    margin: 0 auto;
+    padding: 40px 24px 80px;
+    position: relative;
+    z-index: 1;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ─── HERO ─── */
+  .hero {
+    padding: 48px 0 40px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 40px;
+    animation: fadeUp 0.5s ease both;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: end;
+    gap: 32px;
+  }
+
+  .hero h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(1.8rem, 4vw, 2.8rem);
+    font-weight: 800;
+    line-height: 1.08;
+    margin-bottom: 14px;
+  }
+
+  .hero h1 em { font-style: normal; color: var(--gold); }
+
+  .hero p {
+    color: var(--text-dim);
+    font-size: 0.95rem;
+    line-height: 1.65;
+    max-width: 480px;
+  }
+
+  .hero-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  .hero-stat {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 12px 18px;
+    text-align: right;
+    min-width: 140px;
+  }
+
+  .hero-stat .n {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: var(--gold);
+    line-height: 1;
+  }
+
+  .hero-stat .l {
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-top: 3px;
+  }
+
+  /* ─── STEPS ─── */
+  .steps {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 32px;
+    animation: fadeUp 0.5s 0.05s ease both;
+  }
+
+  .step {
+    background: var(--surface);
+    padding: 18px 20px;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .step-num {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--border2);
+    line-height: 1;
+    flex-shrink: 0;
+    width: 28px;
+  }
+
+  .step.active .step-num { color: var(--gold); }
+
+  .step-text {}
+  .step-label {
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 3px;
+  }
+
+  .step h3 {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-mid);
+  }
+
+  .step.active h3 { color: var(--text); }
+
+  /* ─── CARD ─── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    margin-bottom: 16px;
+    overflow: hidden;
+    animation: fadeUp 0.5s 0.1s ease both;
+  }
+
+  .card-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--surface2);
+  }
+
+  .card-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-mid);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .card-title-dot {
+    width: 5px; height: 5px;
+    background: var(--gold);
+    border-radius: 50%;
+  }
+
+  .card-body { padding: 20px; }
+
+  /* ─── EMPLOYEE ROW ─── */
+  .employee-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .emp-empty {
+    color: var(--text-dim);
+    font-size: 0.85rem;
+    padding: 8px 0;
+  }
+
+  .employee-row {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 12px 14px;
+    display: grid;
+    grid-template-columns: 160px 100px 1fr auto;
+    gap: 10px;
+    align-items: center;
+    transition: border-color 0.2s;
+  }
+
+  .employee-row:hover { border-color: var(--border2); }
+
+  .emp-col-label {
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 5px;
+  }
+
+  input[type="text"], select {
+    background: var(--surface3);
+    border: 1px solid var(--border2);
+    border-radius: 3px;
+    padding: 8px 12px;
+    color: var(--text);
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 0.85rem;
+    width: 100%;
+    transition: border-color 0.15s;
+    outline: none;
+  }
+
+  input[type="text"]:focus, select:focus { border-color: var(--gold-dim); }
+  input[type="text"]::placeholder { color: var(--text-dim); }
+
+  .days-wrap {}
+  .days-label { font-size: 0.65rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 5px; }
+
+  .days-selector { display: flex; gap: 4px; flex-wrap: wrap; }
+
+  .day-btn {
+    width: 32px; height: 28px;
+    border: 1px solid var(--border2);
+    background: transparent;
+    color: var(--text-dim);
+    border-radius: 3px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 0.65rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.12s;
+    letter-spacing: 0.03em;
+  }
+
+  .day-btn.active {
+    background: var(--gold);
+    border-color: var(--gold);
+    color: #000;
+  }
+
+  .day-btn:hover:not(.active) { border-color: var(--gold-dim); color: var(--text); }
+
+  .remove-btn {
+    width: 28px; height: 28px;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    color: var(--text-dim);
+    cursor: pointer;
+    font-size: 0.9rem;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s;
+    flex-shrink: 0;
+    align-self: center;
+  }
+
+  .remove-btn:hover { border-color: var(--red); color: var(--red); }
+
+  /* ─── SETTINGS GRID ─── */
+  .settings-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+  }
+
+  .field { display: flex; flex-direction: column; gap: 7px; }
+
+  .field label {
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+
+  /* ─── GENERATE BTN ─── */
+  .generate-wrap {
+    margin: 20px 0 0;
+  }
+
+  .btn-generate {
+    width: 100%;
+    padding: 16px;
+    background: var(--gold);
+    color: #000;
+    border: none;
+    border-radius: 4px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+
+  .btn-generate:hover { background: var(--gold-light); transform: translateY(-1px); box-shadow: 0 8px 32px rgba(201,168,76,0.18); }
+  .btn-generate:active { transform: translateY(0); }
+  .btn-generate:disabled { opacity: 0.35; cursor: not-allowed; transform: none; box-shadow: none; }
+
+  .btn-ghost {
+    background: transparent;
+    border: 1px solid var(--border2);
+    border-radius: 3px;
+    color: var(--text-dim);
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 7px 14px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .btn-ghost:hover { border-color: var(--gold-dim); color: var(--text); }
+
+  .error-msg {
+    display: none;
+    background: rgba(224,85,85,0.08);
+    border: 1px solid rgba(224,85,85,0.25);
+    border-radius: 3px;
+    padding: 10px 14px;
+    color: var(--red);
+    font-size: 0.82rem;
+    margin-top: 10px;
+  }
+  .error-msg.active { display: block; }
+
+  /* ─── LOADING ─── */
+  .loading {
+    display: none;
+    padding: 48px;
+    text-align: center;
+  }
+  .loading.active { display: block; }
+
+  .loading-inner {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .spinner {
+    width: 36px; height: 36px;
+    border: 2px solid var(--border2);
+    border-top-color: var(--gold);
+    border-radius: 50%;
+    animation: spin 0.75s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .loading p { color: var(--text-dim); font-size: 0.85rem; }
+  .loading p em { color: var(--gold); font-style: normal; }
+
+  .loading-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 4px;
+  }
+
+  .loading-step {
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .loading-step .dot {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: var(--border2);
+    flex-shrink: 0;
+  }
+
+  .loading-step.done .dot { background: var(--green); }
+  .loading-step.active .dot { background: var(--gold); animation: pulse 1s ease infinite; }
+  .loading-step.active { color: var(--text-mid); }
+
+  /* ─── RESULT ─── */
+  .result { display: none; animation: fadeUp 0.4s ease both; }
+  .result.active { display: block; }
+
+  /* Summary row */
+  .summary-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  .sum-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 14px 16px;
+  }
+
+  .sum-card .n {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: var(--gold);
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+
+  .sum-card .l {
+    font-size: 0.65rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+
+  /* Schedule table wrapper */
+  .table-wrap {
+    width: 100%;
+    overflow-x: auto;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    margin-bottom: 16px;
+  }
+
+  .schedule-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.82rem;
+    min-width: 700px;
+  }
+
+  .schedule-table th {
+    font-family: 'Syne', sans-serif;
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    padding: 11px 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface2);
+    white-space: nowrap;
+  }
+
+  .schedule-table th.weekend { color: var(--gold); }
+
+  .schedule-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+
+  .schedule-table tr:last-child td { border-bottom: none; }
+  .schedule-table tr:hover td { background: var(--surface2); }
+
+  .schedule-table td.weekend { background: rgba(201,168,76,0.02); }
+  .schedule-table tr:hover td.weekend { background: rgba(201,168,76,0.04); }
+
+  .emp-cell { display: flex; flex-direction: column; gap: 2px; }
+  .emp-name { font-weight: 600; color: var(--text); white-space: nowrap; }
+  .emp-role { font-size: 0.7rem; color: var(--text-dim); }
+
+  .shift-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 7px;
+    border-radius: 2px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+  }
+
+  .shift-morning { background: rgba(201,168,76,0.12); color: var(--gold-light); border: 1px solid rgba(201,168,76,0.25); }
+  .shift-evening { background: rgba(94,196,138,0.08); color: var(--green); border: 1px solid rgba(94,196,138,0.2); }
+  .shift-split   { background: rgba(106,180,232,0.08); color: var(--blue);  border: 1px solid rgba(106,180,232,0.2); }
+  .shift-off     { color: var(--border2); font-size: 0.85rem; }
+
+  .hours-cell { font-weight: 700; color: var(--text); }
+  .hours-bar {
+    height: 3px;
+    background: var(--border);
+    border-radius: 2px;
+    margin-top: 4px;
+    overflow: hidden;
+  }
+  .hours-fill { height: 100%; background: var(--gold); border-radius: 2px; transition: width 1s ease; }
+
+  /* AI note */
+  .ai-note {
+    background: rgba(201,168,76,0.04);
+    border: 1px solid rgba(201,168,76,0.15);
+    border-left: 3px solid var(--gold);
+    border-radius: 0 4px 4px 0;
+    padding: 14px 18px;
+    font-size: 0.85rem;
+    line-height: 1.65;
+    color: var(--text-mid);
+    margin-bottom: 16px;
+  }
+
+  .ai-note strong { color: var(--gold); }
+
+  /* Legend */
+  .legend {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+    padding: 12px 14px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.75rem;
+    color: var(--text-dim);
+  }
+
+  /* Actions */
+  .result-actions { display: flex; gap: 10px; }
+
+  .btn-action {
+    flex: 1;
+    padding: 11px;
+    background: transparent;
+    border: 1px solid var(--border2);
+    border-radius: 3px;
+    color: var(--text-dim);
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .btn-action:hover { border-color: var(--gold-dim); color: var(--text); }
+  .btn-pdf { border-color: rgba(201,168,76,0.4); color: var(--gold); }
+  .btn-pdf:hover { background: rgba(201,168,76,0.08); border-color: var(--gold); color: var(--gold-light); }
+  .btn-pdf:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* Divider */
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 32px 0;
+  }
+
+  /* ─── RESPONSIVE ─── */
+  @media (max-width: 768px) {
+    header { padding: 14px 20px; }
+    .hero { grid-template-columns: 1fr; gap: 20px; }
+    .hero-stats { flex-direction: row; }
+    .hero-stat { text-align: left; min-width: unset; flex: 1; }
+    .steps { grid-template-columns: 1fr; gap: 1px; }
+    .employee-row { grid-template-columns: 1fr; gap: 8px; }
+    .settings-grid { grid-template-columns: 1fr 1fr; }
+    .summary-row { grid-template-columns: 1fr 1fr; }
+  }
+
+  @media (max-width: 480px) {
+    .settings-grid { grid-template-columns: 1fr; }
+    .hero-stats { flex-direction: column; }
+    .container { padding: 24px 14px 60px; }
+  }
+
+  /* ─── TOOLTIP ─── */
+  .shift-tag { position: relative; cursor: default; }
+  .shift-tag::after {
+    content: attr(data-tip);
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1a1a1a;
+    border: 1px solid var(--border2);
+    color: var(--text);
+    font-size: 0.7rem;
+    font-weight: 400;
+    letter-spacing: 0;
+    white-space: nowrap;
+    padding: 4px 8px;
+    border-radius: 3px;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.15s;
+    z-index: 10;
+  }
+  .shift-tag:hover::after { opacity: 1; }
+
+  /* ─── WEEK BADGE ─── */
+  .week-badge {
+    background: var(--surface3);
+    border: 1px solid var(--border2);
+    border-radius: 3px;
+    padding: 4px 10px;
+    font-size: 0.7rem;
+    color: var(--text-dim);
+    letter-spacing: 0.08em;
+  }
+
+  /* ─── FOOTER ─── */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 20px 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 60px;
+  }
+
+  .footer-left {
+    font-size: 0.72rem;
+    color: var(--text-dim);
+    letter-spacing: 0.05em;
+  }
+
+  .footer-left strong { color: var(--gold); }
+
+  .footer-right {
+    font-size: 0.68rem;
+    color: var(--border2);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  /* ─── SUM CARD COUNTER ─── */
+  .sum-card .n { transition: all 0.3s; }
+
+  /* ─── CONFIRM MODAL ─── */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(4px);
+  }
+  .modal-overlay.active { display: flex; }
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: 6px;
+    padding: 28px 32px;
+    max-width: 360px;
+    width: 90%;
+    animation: fadeUp 0.2s ease both;
+  }
+  .modal h3 {
+    font-family: 'Syne', sans-serif;
+    font-size: 1rem;
+    margin-bottom: 10px;
+  }
+  .modal p { font-size: 0.85rem; color: var(--text-dim); line-height: 1.55; margin-bottom: 20px; }
+  .modal-actions { display: flex; gap: 10px; }
+  .btn-modal-cancel { flex: 1; padding: 10px; background: transparent; border: 1px solid var(--border2); border-radius: 3px; color: var(--text-dim); font-family: 'Space Grotesk', sans-serif; font-size: 0.8rem; font-weight: 600; cursor: pointer; }
+  .btn-modal-cancel:hover { border-color: var(--text-dim); color: var(--text); }
+  .btn-modal-confirm { flex: 1; padding: 10px; background: var(--red); border: none; border-radius: 3px; color: #fff; font-family: 'Space Grotesk', sans-serif; font-size: 0.8rem; font-weight: 700; cursor: pointer; }
+  .btn-modal-confirm:hover { opacity: 0.85; }
+
+  /* ─── TOOLTIPS & HINTS ─── */
+  .tip-icon {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 14px; height: 14px; border-radius: 50%;
+    background: var(--border2); color: var(--text-dim);
+    font-size: 0.6rem; font-weight: 700; cursor: default;
+    position: relative; vertical-align: middle; margin-left: 4px;
+  }
+  .tip-icon::after {
+    content: attr(data-tip);
+    position: absolute; bottom: calc(100% + 8px); left: 50%;
+    transform: translateX(-50%);
+    background: #1c1c1c; border: 1px solid var(--border2);
+    color: var(--text-mid); font-size: 0.72rem; font-weight: 400;
+    line-height: 1.5; letter-spacing: 0; text-transform: none;
+    white-space: normal; width: 220px; padding: 8px 10px;
+    border-radius: 4px; pointer-events: none;
+    opacity: 0; transition: opacity 0.15s; z-index: 50;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+  }
+  .tip-icon:hover::after { opacity: 1; }
+
+  .setting-hint {
+    font-size: 0.68rem; color: var(--text-dim);
+    margin-top: 5px; line-height: 1.4;
+    min-height: 1.4em;
+    transition: color 0.2s;
+  }
+
+  input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(0.5);
+    cursor: pointer;
+  }
+
+  @media print {
+    header, .hero, .steps, .card:not(.result-card), .generate-wrap, .result-actions, .ai-pill, footer { display: none !important; }
+    .result { display: block !important; }
+    body { background: white; color: black; }
+    .schedule-table th, .schedule-table td { border-color: #ccc; }
+    .shift-morning { background: #fff8e6; color: #7a5c00; }
+    .shift-evening { background: #e6f7ee; color: #1a6640; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo-wrap">
+    <div class="logo-icon">⚡</div>
+    <div class="logo">
+      Shift.AI
+      <small>Automatizacija rasporeda</small>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="ai-pill">
+      <div class="ai-dot"></div>
+      Shift.AI
+    </div>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- Hero -->
+  <div class="hero">
+    <div>
+      <h1>Tjedni raspored<br><em>generiran AI-om</em></h1>
+      <p>Unesite zaposlenike, njihove uloge i dostupnost. <strong style="color:var(--gold);">Shift.AI</strong> automatski raspoređuje smjene — ravnomjerno, bez sukoba, u sekundi.</p>
+    </div>
+    <div class="hero-stats">
+      <div class="hero-stat">
+        <div class="n">5–15s</div>
+        <div class="l">Generiranje</div>
+      </div>
+      <div class="hero-stat">
+        <div class="n">7 dana</div>
+        <div class="l">Pokrivenost</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Steps -->
+  <div class="steps">
+    <div class="step active">
+      <div class="step-num">1</div>
+      <div class="step-text">
+        <div class="step-label">Korak</div>
+        <h3>Dodaj zaposlenike</h3>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-text">
+        <div class="step-label">Korak</div>
+        <h3>Postavi parametre</h3>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-text">
+        <div class="step-label">Korak</div>
+        <h3>Generiraj raspored</h3>
+      </div>
+    </div>
+  </div>
+
+  <!-- Employees -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">
+        <div class="card-title-dot"></div>
+        Zaposlenici
+      </div>
+      <button class="btn-ghost" onclick="addEmployee()">+ Dodaj zaposlenika</button>
+    </div>
+    <div class="card-body">
+      <div style="display:grid;grid-template-columns:160px 100px 1fr 28px;gap:10px;padding:0 0 8px;border-bottom:1px solid var(--border);margin-bottom:10px;">
+        <div class="emp-col-label">Ime</div>
+        <div class="emp-col-label">Uloga</div>
+        <div class="emp-col-label">Dostupnost (dani)</div>
+        <div></div>
+      </div>
+      <div class="employee-list" id="employeeList">
+        <div class="emp-empty">Još nema zaposlenika. Kliknite + Dodaj zaposlenika.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Settings -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">
+        <div class="card-title-dot"></div>
+        Postavke rasporeda
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="settings-grid">
+
+        <div class="field">
+          <label>Tjedan <span class="tip-icon" data-tip="Odaberi početak tjedna za koji generiraš raspored.">?</span></label>
+          <input type="date" id="weekPicker" style="background:var(--surface3);border:1px solid var(--border2);border-radius:3px;padding:8px 12px;color:var(--text);font-family:'Space Grotesk',sans-serif;font-size:0.85rem;width:100%;outline:none;">
+          <div id="weekRangeLabel" style="font-size:0.7rem;color:var(--text-dim);margin-top:4px;"></div>
+        </div>
+
+        <div class="field">
+          <label>Min. zaposlenika / smjena</label>
+          <select id="minPerShift">
+            <option value="1">1 osoba</option>
+            <option value="2" selected>2 osobe</option>
+            <option value="3">3 osobe</option>
+            <option value="4">4 osobe</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Tip tjedna <span class="tip-icon" data-tip="Standard: normalan tjedan, svi dani jednako važni. Vikend fokus: subota i nedjelja imaju prioritet, raspoređuje se više ljudi. Puni tjedan: isto kao Standard ali AI dobiva nalog da pokrije baš svih 7 dana bez praznina.">?</span></label>
+          <select id="weekType">
+            <option value="standard">Standard (Pon–Ned)</option>
+            <option value="weekend">Vikend fokus</option>
+            <option value="full">Puni tjedan</option>
+          </select>
+          <div class="setting-hint" id="hintWeekType">Svi dani jednako važni — normalan raspored.</div>
+        </div>
+
+        <div class="field">
+          <label>Prioritet <span class="tip-icon" data-tip="Ravnomjerno: svi rade otprilike isti broj sati. Maks. pokrivenost: što više smjena popunjeno, makar netko radio više. Odmor zaposlenika: AI izbjegava uzastopne radne dane i pazi da svi imaju dovoljno slobodnih dana.">?</span></label>
+          <select id="priority">
+            <option value="fair">Ravnomjerna raspodjela</option>
+            <option value="coverage">Maks. pokrivenost</option>
+            <option value="rest">Odmor zaposlenika</option>
+          </select>
+          <div class="setting-hint" id="hintPriority">Svi zaposlenici dobivaju podjednak broj sati i smjena.</div>
+        </div>
+
+        <div class="field">
+          <label>Smjene</label>
+          <select id="shiftType">
+            <option value="both">Jutarnje + Večernje</option>
+            <option value="morning">Samo jutarnje</option>
+            <option value="evening">Samo večernje</option>
+            <option value="split">Podijeljene smjene</option>
+          </select>
+        </div>
+
+      </div>
+      <div style="margin-top:14px;">
+        <div class="field">
+          <label>Posebne napomene za AI</label>
+          <input type="text" id="extraNote" placeholder="npr. Ana ne može raditi subotom, Marko preferira večernje smjene...">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Generate -->
+  <div class="generate-wrap">
+    <button class="btn-generate" id="generateBtn" onclick="generateSchedule()">
+      <span>✦</span>
+      Generiraj raspored s <span style="letter-spacing:0.05em;">Shift.AI</span>
+    </button>
+    <div class="error-msg" id="errorMsg"></div>
+  </div>
+
+  <!-- Loading -->
+  <div class="loading" id="loading">
+    <div class="loading-inner">
+      <div class="spinner"></div>
+      <p><em>Shift.AI</em> generira optimalni raspored...</p>
+      <div class="loading-steps" id="loadingSteps">
+        <div class="loading-step done"><div class="dot"></div>Učitavanje podataka o zaposlenicima</div>
+        <div class="loading-step active"><div class="dot"></div>Analiza dostupnosti i ograničenja</div>
+        <div class="loading-step"><div class="dot"></div>Optimizacija rasporeda</div>
+        <div class="loading-step"><div class="dot"></div>Provjera sukoba i ravnoteže</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Result -->
+  <div class="result" id="result">
+    <div class="divider"></div>
+
+    <div class="card result-card">
+      <div class="card-header">
+        <div class="card-title">
+          <div class="card-title-dot"></div>
+          Generirani tjedni raspored
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div class="week-badge" id="weekBadge"></div>
+          <div class="ai-pill" style="font-size:0.65rem;">
+            <div class="ai-dot"></div>
+            Shift.AI
+          </div>
+        </div>
+      </div>
+      <div class="card-body">
+
+        <div class="summary-row" id="summaryRow"></div>
+
+        <div class="legend">
+          <div class="legend-item"><span class="shift-tag shift-morning">🌅 Jutarnja</span> 08:00–16:00</div>
+          <div class="legend-item"><span class="shift-tag shift-evening">🌙 Večernja</span> 16:00–24:00</div>
+          <div class="legend-item"><span class="shift-tag shift-split">↔ Podijeljena</span> 10:00–22:00</div>
+          <div class="legend-item"><span style="color:var(--border2);font-size:1rem;">—</span> <span style="font-size:0.75rem;color:var(--text-dim);">Slobodan dan</span></div>
+        </div>
+
+        <div class="table-wrap">
+          <table class="schedule-table" id="scheduleTable"></table>
+        </div>
+
+        <div class="ai-note" id="aiNote"></div>
+
+        <div class="result-actions">
+          <button class="btn-action btn-pdf" onclick="downloadPDF()">⬇ Preuzmi PDF</button>
+          <button class="btn-action btn-copy" onclick="copyToClipboard()">⎘ Kopiraj tablicu</button>
+          <button class="btn-action" onclick="openModal()">↺ Novi raspored</button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</div><!-- /container -->
+
+<!-- Confirm Reset Modal -->
+<div class="modal-overlay" id="resetModal">
+  <div class="modal">
+    <h3>Poništi raspored?</h3>
+    <p>Generirani raspored bit će uklonjen. Zaposlenici i postavke ostaju.</p>
+    <div class="modal-actions">
+      <button class="btn-modal-cancel" onclick="closeModal()">Odustani</button>
+      <button class="btn-modal-confirm" onclick="confirmReset()">Da, poništi</button>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div class="footer-left">Izrađeno uz <strong>Shift.AI</strong> · v2.0</div>
+  <div style="font-size:0.68rem;color:var(--text-dim);letter-spacing:0.08em;">Izradio <strong style="color:var(--gold);">Ivan Pejić</strong></div>
+  <div class="footer-right">Occulto Bar · 2025</div>
+</footer>
+
+<script>
+const DAYS = ['Pon','Uto','Sri','Čet','Pet','Sub','Ned'];
+const DAYS_FULL = ['Ponedjeljak','Utorak','Srijeda','Četvrtak','Petak','Subota','Nedjelja'];
+const WEEKEND = [4,5,6];
+const ROLES = ['Konobar/ica','Barista','Šanker/ica','Menadžer','Čistač/ica','Kuhar/ica','Dostava'];
+
+let employees = [];
+let empCount = 0;
+
+function addEmployee() {
+  const id = ++empCount;
+  employees.push({ id, name: '', role: 'Konobar/ica', days: [] });
+  renderEmployees();
+}
+
+function removeEmployee(id) {
+  employees = employees.filter(e => e.id !== id);
+  renderEmployees();
+}
+
+function toggleDay(empId, dayIdx) {
+  const emp = employees.find(e => e.id === empId);
+  if (!emp) return;
+  emp.days = emp.days.includes(dayIdx) ? emp.days.filter(d => d !== dayIdx) : [...emp.days, dayIdx];
+  renderEmployees();
+}
+
+function updateName(id, val) { const e = employees.find(e=>e.id===id); if(e) e.name=val; }
+function updateRole(id, val) { const e = employees.find(e=>e.id===id); if(e) e.role=val; }
+
+function renderEmployees() {
+  const list = document.getElementById('employeeList');
+  if (!employees.length) {
+    list.innerHTML = '<div class="emp-empty">Još nema zaposlenika. Kliknite + Dodaj zaposlenika.</div>';
+    return;
+  }
+  list.innerHTML = employees.map(emp => `
+    <div class="employee-row">
+      <div>
+        <input type="text" placeholder="Ime i prezime" value="${emp.name}" oninput="updateName(${emp.id}, this.value)">
+      </div>
+      <div>
+        <select onchange="updateRole(${emp.id}, this.value)">
+          ${ROLES.map(r=>`<option value="${r}" ${emp.role===r?'selected':''}>${r}</option>`).join('')}
+        </select>
+      </div>
+      <div>
+        <div class="days-selector">
+          ${DAYS.map((d,i)=>`
+            <button class="day-btn ${emp.days.includes(i)?'active':''}" onclick="toggleDay(${emp.id},${i})">${d}</button>
+          `).join('')}
+        </div>
+      </div>
+      <button class="remove-btn" onclick="removeEmployee(${emp.id})">×</button>
+    </div>
+  `).join('');
+}
+
+async function generateSchedule() {
+  if (!employees.length) return showError('Dodaj barem jednog zaposlenika.');
+  for (const emp of employees) {
+    if (!emp.name.trim()) return showError('Svi zaposlenici moraju imati ime.');
+    if (!emp.days.length) return showError(`"${emp.name}" nema označenih dana dostupnosti.`);
+  }
+
+  hideError();
+  document.getElementById('generateBtn').disabled = true;
+  document.getElementById('loading').classList.add('active');
+  document.getElementById('result').classList.remove('active');
+  animateLoadingSteps();
+
+  const minPerShift = document.getElementById('minPerShift').value;
+  const weekType = document.getElementById('weekType').value;
+  const priority = document.getElementById('priority').value;
+  const shiftType = document.getElementById('shiftType').value;
+  const extraNote = document.getElementById('extraNote').value;
+
+  const empData = employees.map(e => ({
+    name: e.name, role: e.role,
+    available: e.days.map(d => DAYS_FULL[d]),
+    unavailable: DAYS_FULL.filter((_, i) => !e.days.includes(i))
+  }));
+
+  const dayAvailCount = DAYS_FULL.map((day, i) => employees.filter(e => e.days.includes(i)).length);
+
+  const shiftDesc = { both: 'Jutarnje (08-16h) i Večernje (16-24h)', morning: 'Samo Jutarnje (08-16h)', evening: 'Samo Večernje (16-24h)', split: 'Podijeljene smjene (10-22h)' }[shiftType];
+
+  const prompt = `Ti si sustav za raspoređivanje smjena. Strogo se drži svih pravila.\n\nZAPOSLENICI:\n${empData.map(e => `- ${e.name} (${e.role})\n  ✅ Može: ${e.available.join(', ')||'nijedan'}\n  ⛔ Ne može: ${e.unavailable.join(', ')||'nijedan'}`).join('\n')}\n\nPARAMETRI:\n- Min po smjeni: ${minPerShift}\n- Tip smjena: ${shiftDesc}\n- Prioritet: ${priority}${extraNote?'\n- Napomene: '+extraNote:''}\n\nPRAVILA:\n1. Dan u "Ne može" → OBAVEZNO "slobodan"\n2. Svaki zaposlenik ima točno 7 dana\n3. Ravnomjerna raspodjela smjena\n\nVrati SAMO JSON bez ikakvih objašnjenja:\n{"schedule":[{"employee":"Ime","role":"Uloga","days":[{"day":"Ponedjeljak","shift":"jutarnja"},{"day":"Utorak","shift":"slobodan"},{"day":"Srijeda","shift":"večernja"},{"day":"Četvrtak","shift":"jutarnja"},{"day":"Petak","shift":"slobodan"},{"day":"Subota","shift":"večernja"},{"day":"Nedjelja","shift":"slobodan"}],"totalHours":32,"workDays":4}],"stats":{"totalShifts":18,"avgHoursPerEmployee":28,"coveragePercent":94,"peakDay":"Subota"},"note":"Kratka napomena."}`;
+
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': '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',
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({ model: 'claude-sonnet-4-20250514', max_tokens: 4000, messages: [{ role: 'user', content: prompt }] })
+    });
+    const data = await resp.json();
+    const text = data.content.map(i => i.text||'').join('');
+    const clean = text.replace(/```json|```/g,'').trim();
+    const parsed = JSON.parse(clean);
+    renderResult(parsed);
+  } catch(err) {
+    showError('Greška pri generiranju. Provjeri internet vezu i pokušaj ponovo.');
+    console.error(err);
+  } finally {
+    document.getElementById('loading').classList.remove('active');
+    document.getElementById('generateBtn').disabled = false;
+  }
+}
+
+function localGenerateSchedule(employees, minPerShift, priority, shiftType) {
+  const SHIFTS_FOR_TYPE = {
+    both: ['jutarnja', 'večernja'],
+    morning: ['jutarnja'],
+    evening: ['večernja'],
+    split: ['podijeljena']
+  };
+  const availableShifts = SHIFTS_FOR_TYPE[shiftType] || ['jutarnja', 'večernja'];
+  const HOURS_PER_SHIFT = { jutarnja: 8, večernja: 8, podijeljena: 12, slobodan: 0 };
+
+  // Track hours per employee for fairness
+  const empHours = employees.map(() => 0);
+  const empConsecutive = employees.map(() => 0);
+
+  // Build schedule: for each employee, for each day
+  const schedule = employees.map((emp, empIdx) => {
+    const days = DAYS_FULL.map((dayName, dayIdx) => {
+      if (!emp.days.includes(dayIdx)) {
+        empConsecutive[empIdx] = 0;
+        return { day: dayName, shift: 'slobodan' };
+      }
+
+      // Priority: rest — avoid more than 4 consecutive days
+      if (priority === 'rest' && empConsecutive[empIdx] >= 4) {
+        empConsecutive[empIdx] = 0;
+        return { day: dayName, shift: 'slobodan' };
+      }
+
+      // Assign shift — rotate for fairness
+      let shift;
+      if (availableShifts.length === 1) {
+        shift = availableShifts[0];
+      } else {
+        // Alternate shifts based on employee index + day to spread evenly
+        shift = availableShifts[(empIdx + dayIdx) % availableShifts.length];
+      }
+
+      empHours[empIdx] += HOURS_PER_SHIFT[shift] || 8;
+      empConsecutive[empIdx]++;
+      return { day: dayName, shift };
+    });
+
+    const workDays = days.filter(d => d.shift !== 'slobodan').length;
+    return {
+      employee: emp.name,
+      role: emp.role,
+      days,
+      totalHours: empHours[empIdx],
+      workDays
+    };
+  });
+
+  // Build stats
+  const totalShifts = schedule.reduce((s, e) => s + e.workDays, 0);
+  const avgHours = Math.round(schedule.reduce((s, e) => s + e.totalHours, 0) / schedule.length);
+
+  // Find peak day (most workers available)
+  const dayCounts = DAYS_FULL.map((d, i) => employees.filter(e => e.days.includes(i)).length);
+  const peakIdx = dayCounts.indexOf(Math.max(...dayCounts));
+  const peakDay = DAYS_FULL[peakIdx];
+
+  // Coverage: days with at least minPerShift workers / total days
+  const coveredDays = DAYS_FULL.filter((d, i) => dayCounts[i] >= minPerShift).length;
+  const coveragePercent = Math.round((coveredDays / 7) * 100);
+
+  // Find days with insufficient coverage
+  const lowDays = DAYS_FULL.filter((d, i) => dayCounts[i] > 0 && dayCounts[i] < minPerShift);
+  const zeroDays = DAYS_FULL.filter((d, i) => dayCounts[i] === 0);
+
+  let note = `Raspored generiran za ${schedule.length} zaposlenika. Vršni dan je ${peakDay} s najviše dostupnih radnika.`;
+  if (lowDays.length) note += ` Nedovoljan broj zaposlenika (ispod minimuma ${minPerShift}): ${lowDays.join(', ')}.`;
+  if (zeroDays.length) note += ` Nema dostupnih zaposlenika: ${zeroDays.join(', ')}.`;
+
+  return {
+    schedule,
+    stats: { totalShifts, avgHoursPerEmployee: avgHours, coveragePercent, peakDay },
+    note
+  };
+}
+
+function animateLoadingSteps() {
+  const steps = document.querySelectorAll('.loading-step');
+  steps.forEach((s,i) => {
+    s.classList.remove('done','active');
+    if (i===0) s.classList.add('done');
+    else if (i===1) s.classList.add('active');
+  });
+  let current = 1;
+  const interval = setInterval(() => {
+    if (current >= steps.length) { clearInterval(interval); return; }
+    steps[current].classList.remove('active');
+    steps[current].classList.add('done');
+    current++;
+    if (current < steps.length) steps[current].classList.add('active');
+  }, 800);
+}
+
+function animateCounter(el, target) {
+  const isNum = !isNaN(target);
+  if (!isNum) { el.textContent = target; return; }
+  const dur = 600, start = performance.now();
+  const from = 0;
+  function step(now) {
+    const p = Math.min((now - start) / dur, 1);
+    const ease = 1 - Math.pow(1 - p, 3);
+    el.textContent = Math.round(from + (target - from) * ease);
+    if (p < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+
+function getWeekRange() {
+  const picker = document.getElementById('weekPicker');
+  let mon;
+  if (picker && picker.value) {
+    // Parse date parts directly to avoid timezone issues
+    const parts = picker.value.split('-');
+    mon = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+  } else {
+    const now = new Date();
+    const day = now.getDay();
+    mon = new Date(now);
+    mon.setDate(now.getDate() - (day === 0 ? 6 : day - 1));
+  }
+  if (isNaN(mon.getTime())) {
+    // Fallback to current week
+    const now = new Date();
+    const day = now.getDay();
+    mon = new Date(now);
+    mon.setDate(now.getDate() - (day === 0 ? 6 : day - 1));
+  }
+  const sun = new Date(mon);
+  sun.setDate(mon.getDate() + 6);
+  const fmt = d => `${d.getDate()}.${d.getMonth()+1}.`;
+  return `${fmt(mon)} – ${fmt(sun)}${sun.getFullYear()}`;
+}
+
+// Init week picker to next Monday
+(function initWeekPicker() {
+  const picker = document.getElementById('weekPicker');
+  if (!picker) return;
+  const now = new Date();
+  const day = now.getDay();
+  const diff = day === 0 ? 1 : (8 - day);
+  const nextMon = new Date(now);
+  nextMon.setDate(now.getDate() + diff);
+  picker.value = nextMon.toISOString().split('T')[0];
+  updateWeekLabel();
+  picker.addEventListener('change', updateWeekLabel);
+})();
+
+function updateWeekLabel() {
+  const label = document.getElementById('weekRangeLabel');
+  if (label) label.textContent = getWeekRange();
+}
+
+// Hints for selects
+const WEEK_HINTS = {
+  standard: 'Svi dani jednako važni — normalan raspored.',
+  weekend: 'Sub i Ned imaju prioritet — raspoređuje se više ljudi vikendom.',
+  full: 'AI puni svih 7 dana bez praznina, maksimalna pokrivenost cijelog tjedna.'
+};
+const PRIORITY_HINTS = {
+  fair: 'Svi zaposlenici dobivaju podjednak broj sati i smjena.',
+  coverage: 'Cilj je popuniti što više smjena — netko može raditi više od ostalih.',
+  rest: 'AI pazi da nema previše uzastopnih dana i da svi imaju dovoljno slobodnog.'
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+  const wt = document.getElementById('weekType');
+  const pr = document.getElementById('priority');
+  if (wt) wt.addEventListener('change', () => {
+    document.getElementById('hintWeekType').textContent = WEEK_HINTS[wt.value] || '';
+  });
+  if (pr) pr.addEventListener('change', () => {
+    document.getElementById('hintPriority').textContent = PRIORITY_HINTS[pr.value] || '';
+  });
+});
+
+function renderResult({ schedule, stats, note }) {
+  const maxHours = Math.max(...schedule.map(e => e.totalHours || 0));
+
+  // Week badge
+  document.getElementById('weekBadge').textContent = getWeekRange();
+
+  // Summary with counter animation
+  const sumData = [
+    { n: schedule.length, l: 'Zaposlenici' },
+    { n: stats.totalShifts, l: 'Ukupno smjena' },
+    { n: stats.coveragePercent, l: 'Pokrivenost %' },
+    { n: stats.peakDay || 'Sub', l: 'Vršni dan', tip: 'Dan s najviše zaposlenika na poslu' },
+  ];
+  document.getElementById('summaryRow').innerHTML = sumData.map((s,i) =>
+    `<div class="sum-card" ${s.tip ? 'title="'+s.tip+'"' : ''} style="${s.tip?'cursor:help;':''}"><div class="n" id="snum${i}">${typeof s.n==='number'?0:s.n}</div><div class="l">${s.l}${s.tip ? ' <span style=\'font-size:0.6rem;color:var(--border2);\'>?</span>' : ''}</div></div>`
+  ).join('');
+  sumData.forEach((s,i) => {
+    setTimeout(() => {
+      const el = document.getElementById(`snum${i}`);
+      animateCounter(el, s.n);
+    }, i * 80);
+  });
+
+  // Table
+  const tbl = document.getElementById('scheduleTable');
+  const shiftInfo = {
+    'jutarnja':    { cls:'shift-morning', icon:'🌅', short:'Jut.', tip:'Jutarnja · 08:00–16:00' },
+    'večernja':    { cls:'shift-evening', icon:'🌙', short:'Več.', tip:'Večernja · 16:00–24:00' },
+    'podijeljena': { cls:'shift-split',   icon:'↔',  short:'Pod.', tip:'Podijeljena · 10:00–22:00' },
+  };
+
+  tbl.innerHTML = `
+    <thead>
+      <tr>
+        <th style="min-width:130px;">Zaposlenik</th>
+        ${DAYS_FULL.map((d,i) => `<th class="${WEEKEND.includes(i)?'weekend':''}" style="min-width:72px;">${d.slice(0,3)}${WEEKEND.includes(i)?'&thinsp;★':''}</th>`).join('')}
+        <th style="min-width:72px;">Sati</th>
+        <th style="min-width:48px;">Dana</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${schedule.map(emp => {
+        const map = {};
+        (emp.days||[]).forEach(d => { map[d.day] = d.shift; });
+        const pct = maxHours > 0 ? Math.round((emp.totalHours/maxHours)*100) : 0;
+        const workDays = (emp.days||[]).filter(d => d.shift !== 'slobodan').length || emp.workDays || '?';
+        return `
+          <tr>
+            <td>
+              <div class="emp-cell">
+                <div class="emp-name">${emp.employee}</div>
+                <div class="emp-role">${emp.role||''}</div>
+              </div>
+            </td>
+            ${DAYS_FULL.map((d,i) => {
+              const s = map[d] || 'slobodan';
+              const wknd = WEEKEND.includes(i) ? ' weekend' : '';
+              const info = shiftInfo[s];
+              const tag = info
+                ? `<span class="shift-tag ${info.cls}" data-tip="${info.tip}">${info.icon} ${info.short}</span>`
+                : `<span class="shift-off" style="color:var(--border2)">—</span>`;
+              return `<td class="${wknd}" style="text-align:center;">${tag}</td>`;
+            }).join('')}
+            <td>
+              <div class="hours-cell">${emp.totalHours}h</div>
+              <div class="hours-bar"><div class="hours-fill" style="width:${pct}%"></div></div>
+            </td>
+            <td style="color:var(--text-mid);font-weight:600;text-align:center;">${workDays}</td>
+          </tr>
+        `;
+      }).join('')}
+    </tbody>
+  `;
+
+  document.getElementById('aiNote').innerHTML = `<strong>🤖 AI napomena:</strong> ${note}`;
+  document.getElementById('result').classList.add('active');
+  setTimeout(() => document.getElementById('result').scrollIntoView({ behavior:'smooth', block:'start' }), 100);
+}
+
+function openModal() { document.getElementById('resetModal').classList.add('active'); }
+function closeModal() { document.getElementById('resetModal').classList.remove('active'); }
+function confirmReset() {
+  closeModal();
+  document.getElementById('result').classList.remove('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// Close modal on overlay click
+document.getElementById('resetModal').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+
+function downloadPDF() {
+  const week = document.getElementById('weekBadge').textContent || 'raspored';
+  const table = document.getElementById('scheduleTable');
+  const note = document.getElementById('aiNote');
+  if (!table) return;
+
+  const btn = document.querySelector('.btn-pdf');
+  btn.textContent = '⏳ Priprema...';
+  btn.disabled = true;
+
+  try {
+    const clone = table.cloneNode(true);
+    clone.querySelectorAll('th').forEach(th => {
+      th.style.cssText = 'background:#f5f5f5;padding:8px 10px;text-align:left;border:1px solid #ddd;font-size:10px;text-transform:uppercase;letter-spacing:0.05em;color:#555;font-family:Arial,sans-serif;';
+      if (th.classList.contains('weekend')) th.style.color = '#7a5c00';
+    });
+    clone.querySelectorAll('td').forEach(td => {
+      td.style.cssText = 'padding:8px 10px;border:1px solid #ddd;vertical-align:middle;font-family:Arial,sans-serif;';
+      if (td.classList.contains('weekend')) td.style.background = '#fffbf0';
+    });
+    clone.querySelectorAll('.shift-morning').forEach(el => {
+      el.style.cssText = 'background:#fff8e6;color:#7a5c00;border:1px solid #e8c97a;padding:2px 6px;border-radius:2px;font-size:10px;font-weight:700;display:inline-block;';
+    });
+    clone.querySelectorAll('.shift-evening').forEach(el => {
+      el.style.cssText = 'background:#e6f7ee;color:#1a6640;border:1px solid #5ec48a;padding:2px 6px;border-radius:2px;font-size:10px;font-weight:700;display:inline-block;';
+    });
+    clone.querySelectorAll('.shift-split').forEach(el => {
+      el.style.cssText = 'background:#e6f1fb;color:#1a4466;border:1px solid #6ab4e8;padding:2px 6px;border-radius:2px;font-size:10px;font-weight:700;display:inline-block;';
+    });
+    clone.querySelectorAll('.shift-off').forEach(el => { el.style.cssText = 'color:#bbb;font-size:12px;'; });
+    clone.querySelectorAll('.emp-name').forEach(el => { el.style.cssText = 'font-weight:700;color:#111;font-family:Arial,sans-serif;'; });
+    clone.querySelectorAll('.emp-role').forEach(el => { el.style.cssText = 'font-size:10px;color:#888;font-family:Arial,sans-serif;'; });
+    clone.querySelectorAll('.hours-bar').forEach(el => el.remove());
+    clone.querySelectorAll('.hours-cell').forEach(el => { el.style.cssText = 'font-weight:700;color:#111;'; });
+    clone.style.cssText = 'width:100%;border-collapse:collapse;font-size:11px;';
+
+    const noteText = note ? note.innerText : '';
+    const today = new Date().toLocaleDateString('hr-HR');
+
+    const htmlContent = [
+      '<!DOCTYPE html><html><head><meta charset="UTF-8">',
+      '<title>ShiftAI Raspored</title>',
+      '<style>*{box-sizing:border-box;margin:0;padding:0;}',
+      'body{font-family:Arial,sans-serif;background:#fff;color:#111;padding:24px 28px;}',
+      '@page{size:A4 landscape;margin:10mm;}',
+      'table{width:100%;border-collapse:collapse;font-size:11px;}',
+      '</style></head><body>',
+      '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;padding-bottom:12px;border-bottom:2px solid #c9a84c;">',
+      '<div><div style="font-size:22px;font-weight:800;color:#111;">SHIFT.AI</div>',
+      '<div style="font-size:11px;color:#888;text-transform:uppercase;margin-top:3px;">Automatizacija rasporeda · Occulto Bar</div></div>',
+      '<div style="text-align:right;"><div style="font-size:14px;font-weight:700;color:#c9a84c;">' + week + '</div>',
+      '<div style="font-size:10px;color:#aaa;margin-top:3px;">Generirano uz Shift.AI</div></div></div>',
+      clone.outerHTML,
+      noteText ? '<div style="margin-top:16px;padding:12px 14px;background:#fffbf0;border-left:3px solid #c9a84c;font-size:11px;color:#555;line-height:1.6;">' + noteText + '</div>' : '',
+      '<div style="margin-top:16px;padding-top:10px;border-top:1px solid #eee;display:flex;justify-content:space-between;font-size:9px;color:#bbb;text-transform:uppercase;">',
+      '<span>Shift.AI · Occulto Bar · Izradio Ivan Pejic</span><span>' + today + '</span></div>',
+      '</body></html>'
+    ].join('');
+
+    // Blob with explicit UTF-8 BOM to avoid encoding issues
+    const blob = new Blob(['﻿' + htmlContent], { type: 'text/html;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'ShiftAI_Raspored.html';
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => {
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, 500);
+
+    btn.textContent = '✓ Preuzeto!';
+    btn.style.color = 'var(--green)';
+    btn.style.borderColor = 'var(--green)';
+  } catch(err) {
+    console.error('PDF error:', err);
+    alert('Greška: ' + err.message);
+    btn.textContent = '⬇ Preuzmi PDF';
+    btn.style.color = '';
+    btn.style.borderColor = '';
+    btn.disabled = false;
+    return;
+  }
+
+  setTimeout(() => {
+    btn.textContent = '⬇ Preuzmi PDF';
+    btn.style.color = '';
+    btn.style.borderColor = '';
+    btn.disabled = false;
+  }, 2500);
+}
+
+function copyToClipboard() {
+  const table = document.getElementById('scheduleTable');
+  const week = document.getElementById('weekBadge').textContent || '';
+  if (!table) return;
+
+  let text = `SHIFT.AI — Tjedni raspored\n${week}\n\n`;
+  table.querySelectorAll('tr').forEach(row => {
+    const cells = Array.from(row.querySelectorAll('th, td')).map(cell => {
+      return cell.innerText.replace(/\n/g, ' ').trim();
+    });
+    text += cells.join('\t') + '\n';
+  });
+
+  const aiNote = document.getElementById('aiNote');
+  if (aiNote) text += `\nAI napomena: ${aiNote.innerText.replace(/🤖 AI napomena:\s*/,'')}\n`;
+  text += `\nGenerirano uz Shift.AI · Occulto Bar`;
+
+  const doFlash = () => {
+    const btn = document.querySelector('.btn-copy');
+    if (!btn) return;
+    const orig = btn.textContent;
+    btn.textContent = '✓ Kopirano!';
+    btn.style.color = 'var(--green)';
+    btn.style.borderColor = 'var(--green)';
+    setTimeout(() => { btn.textContent = orig; btn.style.color = ''; btn.style.borderColor = ''; }, 2200);
+  };
+
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(doFlash).catch(() => fallbackCopy(text));
+  } else {
+    fallbackCopy(text);
+  }
+}
+
+function fallbackCopy(text) {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.cssText = 'position:fixed;top:-9999px;opacity:0;';
+  document.body.appendChild(ta);
+  ta.focus(); ta.select();
+  try { document.execCommand('copy'); document.querySelector('.btn-copy') && (document.querySelector('.btn-copy').textContent = '✓ Kopirano!'); }
+  catch(e) { alert('Kopiraj ručno: Ctrl+C'); }
+  document.body.removeChild(ta);
+}
+
+function showError(msg) {
+  const el = document.getElementById('errorMsg');
+  el.textContent = msg;
+  el.classList.add('active');
+}
+
+function hideError() { document.getElementById('errorMsg').classList.remove('active'); }
+
+// Default employees
+(function init() {
+  employees = [
+    { id: ++empCount, name: 'Ana K.', role: 'Konobar/ica', days: [0,1,2,4,5] },
+    { id: ++empCount, name: 'Marko P.', role: 'Šanker/ica', days: [2,3,4,5,6] },
+    { id: ++empCount, name: 'Sara L.', role: 'Barista', days: [0,1,3,5,6] },
+    { id: ++empCount, name: 'Ivan R.', role: 'Menadžer', days: [0,1,2,3,4] },
+  ];
+  renderEmployees();
+})();
+</script>
+</body>
+</html>
